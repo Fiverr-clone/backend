@@ -7,9 +7,7 @@ const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}
 const userRoutes = require("./routes/user");
 const app = express();
 
-mongoose
-	.connect(uri)
-	.then(() => {
+mongoose.connect(uri).then(() => {
 		console.log("Successfully connected to MongoDB Atlas!");
 	})
 	.catch((error) => {
@@ -19,6 +17,7 @@ mongoose
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+//app.use(express.json());
 
 app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");

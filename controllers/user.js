@@ -5,6 +5,9 @@ const User = require("../models/user");
 exports.join = (req, res, next) => {
 	bcrypt.hash(req.body.password, 10, function (err, hash) {
 		const user = new User({
+			lastName: req.body.lastName,
+			firstName: req.body.firstName,
+			userName: req.body.userName,
 			email: req.body.email,
 			password: hash,
 		});
