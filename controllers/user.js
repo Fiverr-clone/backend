@@ -7,7 +7,7 @@ exports.join = (req, res, next) => {
 		const user = new User({
 			lastName: req.body.lastName,
 			firstName: req.body.firstName,
-			userName: req.body.userName,
+			username: req.body.username,
 			email: req.body.email,
 			password: hash,
 		});
@@ -31,7 +31,7 @@ exports.signin = (req, res, next) => {
 		.then((user) => {
 			if (!user) {
 				return res.status(401).json({
-					error: "User not found!",
+					error: "Wrong credentials !",
 				});
 			}
 			bcrypt
@@ -39,7 +39,7 @@ exports.signin = (req, res, next) => {
 				.then((valid) => {
 					if (!valid) {
 						return res.status(401).json({
-							error: "Incorrect password!",
+							error: "Wrong credentials !",
 						});
 					}
 					const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
