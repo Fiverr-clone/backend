@@ -14,6 +14,11 @@ exports.join = (req, res, next) => {
 		user
 			.save()
 			.then(() => {
+				const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+					expiresIn: process.env.JWT_EXPIRES_IN,
+				});
+				res.cookie("userId", user._id, { maxAge: 3600000 });
+				res.cookie("token", token, { maxAge: 3600000 });
 				res.status(201).json({
 					message: "User added successfully!",
 				});
@@ -45,6 +50,9 @@ exports.signin = (req, res, next) => {
 					const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
 						expiresIn: process.env.JWT_EXPIRES_IN,
 					});
+					res.cookie("userId", user._id, { maxAge: 3600000 });
+					res.cookie("token", token, { maxAge: 3600000 });
+
 					res.status(200).json({
 						userId: user._id,
 						token: token,

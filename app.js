@@ -1,15 +1,21 @@
 const express = require("express");
 require("dotenv").config();
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
+const Category = require("./models/category");
+const SubCategory = require("./models/sub_category");
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.CLUSTER_USERNAME}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
 const userRoutes = require("./routes/user");
 const categoryRoutes = require("./routes/category");
 const sub_categoryRoutes = require("./routes/sub_category");
+const serviceRoutes = require("./routes/service");
 const app = express();
 
-mongoose.connect(uri).then(() => {
+mongoose
+	.connect(uri)
+	.then(() => {
 		console.log("Successfully connected to MongoDB Atlas!");
 	})
 	.catch((error) => {
@@ -17,9 +23,9 @@ mongoose.connect(uri).then(() => {
 		console.error(error);
 	});
 
+app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-//app.use(express.json());
 
 app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");
@@ -35,20 +41,21 @@ app.use((req, res, next) => {
 });
 
 app.use("/api", userRoutes);
-app.get('/api/categories', async (req, res) => {
+app.get("/api/categories", async (req, res) => {
 	try {
-	  const categories = await Category.find();
-	  res.status(200).json(categories);
+		const categories = await Category.find();
+		res.status(200).json(categories);
 	} catch (error) {
-	  res.status(500).json({ error: error.message });
+		res.status(500).json({ error: error.message });
 	}
-  });
-  app.get('/api/sub_categories', async (req, res) => {
+});
+app.get("/api/sub_categories", async (req, res) => {
 	try {
-	  const sub_categories = await Category.find();
-	  res.status(200).json(sub_categories);
+		const sub_categories = await Category.find();
+		res.status(200).json(sub_categories);
 	} catch (error) {
-	  res.status(500).json({ error: error.message });
+		res.status(500).json({ error: error.message });
 	}
-  });
+});
+app.use("/api", serviceRoutes);
 module.exports = app;
