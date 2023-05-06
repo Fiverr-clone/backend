@@ -51,7 +51,7 @@ exports.signin = (req, res, next) => {
 						expiresIn: process.env.JWT_EXPIRES_IN,
 					});
 					res.cookie("userId", user._id, { maxAge: 3600000 });
-					res.cookie("token", token, { maxAge: 3600000 });
+					res.cookie("token", token, { httpOnly: true }, { maxAge: 3600000 });
 
 					res.status(200).json({
 						userId: user._id,

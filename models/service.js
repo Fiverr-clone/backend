@@ -20,4 +20,4 @@ const serviceSchema = mongoose.Schema({
 	buyerInstruction: { type: String, required: false },
 });
 
-// module.exports = mongoose.model("Service", serviceSchema);
+module.exports = mongoose.model("Service", serviceSchema);

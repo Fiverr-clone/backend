@@ -2,18 +2,27 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 module.exports = (req, res, next) => {
+	// Get the token from the request header
+	const token = req.cookies.token;
+
+	// Check if the token is missing
+	if (!token) {
+		return res.status(401).json({ msg: "No token, authorization denied" });
+	}
+
 	try {
-		const token = req.headers.authorization.split(" ")[1];
-		const decodedToken = jwt.verify(token, JWT_SECRET);
-		const userId = decodedToken.userId;
-		if (req.body.userId && req.body.userId !== userId) {
-			throw "Invalid user ID";
-		} else {
-			next();
-		}
-	} catch {
-		res.status(401).json({
-			error: new Error("Invalid request!"),
-		});
+		// Verify the token
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+		// Add the user to the request object
+		req.user = decoded;
+
+		// Move on to the next middleware
+		next();
+	} catch (err) {
+		// Handle token verification errors
+		res.status(401).json({ msg: "Token is not valid" });
 	}
 };
+
+// module.exports = auth;
