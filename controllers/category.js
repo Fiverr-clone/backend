@@ -1,26 +1,25 @@
 const Category = require('../models/category');
 
-exports.createCategory = async (req, res) => {
-  const { categoryName } = req.body;
+// exports.createCategory = async (req, res) => {
+//   const { categoryName } = req.body;
+//   try {
+//     const category = new Category({
+//       categoryName,
+//     });
 
-  try {
-    const category = new Category({
-      categoryName,
-    });
+//     await category.save();
 
-    await category.save();
-
-    res.status(201).json({
-      message: 'Category created successfully',
-      category,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: 'Unable to create category',
-      error: error.message,
-    });
-  }
-};
+//     res.status(201).json({
+//       message: 'Category created successfully',
+//       category,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: 'Unable to create category',
+//       error: error.message,
+//     });
+//   }
+// };
 
 
 // Get all categories
@@ -35,6 +34,7 @@ exports.getAllCategories = (req, res) => {
       });
     });
 };
+
 exports.onlineCourses = (req, res) => {
   res.redirect('/online-courses');
 };

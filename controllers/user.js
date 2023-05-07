@@ -73,12 +73,13 @@ exports.signin = (req, res, next) => {
 							error: "Please verify your email !",
 						});
 					}
-
 					const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
 						expiresIn: process.env.JWT_EXPIRES_IN,
 					});
+					// res.cookie("userId", user._id, { maxAge: 3600000 });
+					// res.cookie("token", token, { httpOnly: true }, { maxAge: 3600000 });
 					res.cookie("userId", user._id, { maxAge: 3600000 });
-					res.cookie("token", token, { httpOnly: true }, { maxAge: 3600000 });
+					res.cookie("token", token, { maxAge: 3600000 });
 
 					emailToken.deleteOne({ userId: user._id }).exec();
 

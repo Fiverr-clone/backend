@@ -2,7 +2,7 @@ const Service = require("../models/service");
 const fs = require("fs");
 
 exports.addService = (req, res, next) => {
-	// const url = req.protocol + "://" + req.get("host");
+	const url = req.protocol + "://" + req.get("host");
 	// req.body.service = JSON.parse(req.body);
 	const service = new Service({
 		userId: req.cookies.userId,
@@ -10,8 +10,8 @@ exports.addService = (req, res, next) => {
 		category: req.body.category,
 		subCategory: req.body.subCategory,
 		description: req.body.description,
-		image: req.body.image,
-		// image: url + "/images/" + req.file.filename,
+		// image: req.body.image,
+		image: url + "/images/" + req.file.name,
 		price: req.body.price,
 		deadline: req.body.deadline,
 		buyerInstruction: req.body.buyerInstruction,
@@ -28,4 +28,9 @@ exports.addService = (req, res, next) => {
 				error: error,
 			});
 		});
+};
+
+exports.verifyService = (req, res, next) => {
+	console.log("body", req.body);
+	console.log("file", req.file);
 };

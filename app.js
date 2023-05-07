@@ -3,13 +3,12 @@ require("dotenv").config();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
-const Category = require("./models/category");
-const SubCategory = require("./models/sub_category");
+const path = require("path");
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.CLUSTER_USERNAME}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
 const userRoutes = require("./routes/user");
 const categoryRoutes = require("./routes/category");
-const sub_categoryRoutes = require("./routes/sub_category");
+const subCategoryRoutes = require("./routes/sub_category");
 const serviceRoutes = require("./routes/service");
 const app = express();
 
@@ -40,22 +39,26 @@ app.use((req, res, next) => {
 	next();
 });
 
+app.use("/images", express.static(path.join(__dirname, "images")));
+
 app.use("/api", userRoutes);
-app.get("/api/categories", async (req, res) => {
-	try {
-		const categories = await Category.find();
-		res.status(200).json(categories);
-	} catch (error) {
-		res.status(500).json({ error: error.message });
-	}
-});
-app.get("/api/sub_categories", async (req, res) => {
-	try {
-		const sub_categories = await Category.find();
-		res.status(200).json(sub_categories);
-	} catch (error) {
-		res.status(500).json({ error: error.message });
-	}
-});
+app.use("/api/categories", categoryRoutes);
+app.use("/api/sub-category", subCategoryRoutes);
+// app.get("/api/categories", async (req, res) => {
+// 	try {
+// 		const categories = await Category.find();
+// 		res.status(200).json(categories);
+// 	} catch (error) {
+// 		res.status(500).json({ error: error.message });
+// 	}
+// });
+// app.get("/api/sub_categories", async (req, res) => {
+// 	try {
+// 		const sub_categories = await Category.find();
+// 		res.status(200).json(sub_categories);
+// 	} catch (error) {
+// 		res.status(500).json({ error: error.message });
+// 	}
+// });
 app.use("/api", serviceRoutes);
 module.exports = app;
