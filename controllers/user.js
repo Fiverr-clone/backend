@@ -1,6 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const emailToken = require("../models/emailToken");
+const sendEmail = require("../utils/sendEmail");
+const crypto = require("crypto");
 
 exports.join = (req, res, next) => {
 	bcrypt.hash(req.body.password, 10, function (err, hash) {
@@ -14,13 +17,21 @@ exports.join = (req, res, next) => {
 		user
 			.save()
 			.then(() => {
-				const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-					expiresIn: process.env.JWT_EXPIRES_IN,
+				// Create a verification token
+				const newEmailToken = new emailToken({
+					userId: user._id,
+					emailToken: crypto.randomBytes(32).toString("hex"),
 				});
-				res.cookie("userId", user._id, { maxAge: 3600000 });
-				res.cookie("token", token, { maxAge: 3600000 });
+				return newEmailToken.save();
+			})
+			.then((savedEmailToken) => {
+				// Send verification email
+				const verificationLink = `${process.env.BASE_URL}${user._id}/verify/${savedEmailToken.emailToken}`;
+				sendEmail(user.email, "Email Verification", verificationLink);
+
 				res.status(201).json({
-					message: "User added successfully!",
+					emailVerification:
+						"An email was sent to your account please verify it",
 				});
 			})
 			.catch((error) => {
@@ -47,11 +58,29 @@ exports.signin = (req, res, next) => {
 							error: "Wrong credentials !",
 						});
 					}
+
+					if (!user.verification) {
+						let token = emailToken.findOne({ userId: user._id });
+						if (!token) {
+							const newEmailToken = new emailToken({
+								userId: user._id,
+								emailToken: crypto.randomBytes(32).toString("hex"),
+							}).save();
+							const verificationLink = `http://${process.env.BASE_URL}users/${user._id}/verify/${newEmailToken.emailToken}`;
+							sendEmail(user.email, "Email Verification", verificationLink);
+						}
+						return res.status(401).json({
+							error: "Please verify your email !",
+						});
+					}
+
 					const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
 						expiresIn: process.env.JWT_EXPIRES_IN,
 					});
 					res.cookie("userId", user._id, { maxAge: 3600000 });
 					res.cookie("token", token, { httpOnly: true }, { maxAge: 3600000 });
+
+					emailToken.deleteOne({ userId: user._id }).exec();
 
 					res.status(200).json({
 						userId: user._id,

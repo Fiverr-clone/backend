@@ -7,7 +7,6 @@ const auth = require("../middleware/auth");
 
 router.post("/add-service", auth, serviceCtrl.addService);
 
-// router.post("/add-service", serviceCtrl.addService);
 // router.post("/add-service", auth, multer, serviceCtrl.addService);
 
 module.exports = router;
