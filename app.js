@@ -1,9 +1,11 @@
 const express = require("express");
+const { graphqlHTTP } = require("express-graphql");
 require("dotenv").config();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const path = require("path");
+const schema = require("./schema/schema");
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.CLUSTER_USERNAME}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
 const userRoutes = require("./routes/user");
@@ -12,6 +14,7 @@ const subCategoryRoutes = require("./routes/sub_category");
 const serviceRoutes = require("./routes/service");
 const app = express();
 
+const { GraphQLSchema, GraphQLObjectType, GraphQLString } = require("graphql");
 mongoose
 	.connect(uri)
 	.then(() => {
@@ -41,24 +44,18 @@ app.use((req, res, next) => {
 
 app.use("/images", express.static(path.join(__dirname, "images")));
 
+app.use(
+	"/graphql",
+	graphqlHTTP({
+		schema,
+		graphiql: true,
+	})
+);
+
 app.use("/api", userRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/sub-category", subCategoryRoutes);
-// app.get("/api/categories", async (req, res) => {
-// 	try {
-// 		const categories = await Category.find();
-// 		res.status(200).json(categories);
-// 	} catch (error) {
-// 		res.status(500).json({ error: error.message });
-// 	}
-// });
-// app.get("/api/sub_categories", async (req, res) => {
-// 	try {
-// 		const sub_categories = await Category.find();
-// 		res.status(200).json(sub_categories);
-// 	} catch (error) {
-// 		res.status(500).json({ error: error.message });
-// 	}
-// });
+
 app.use("/api", serviceRoutes);
+
 module.exports = app;
