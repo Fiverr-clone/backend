@@ -16,7 +16,7 @@ const serviceSchema = mongoose.Schema({
 	description: { type: String, required: true },
 	image: { type: String, required: true },
 	price: { type: Number, required: true },
-	deadline: { type: Date, required: true },
+	deliveryTime: { type: Number, required: true },
 	buyerInstruction: { type: String, required: false },
 });
 

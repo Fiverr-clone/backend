@@ -10,7 +10,7 @@ exports.addService = (req, res, next) => {
 		description: req.body.description,
 		image: req.file.path,
 		price: req.body.price,
-		deadline: req.body.deadline,
+		deliveryTime: req.body.deliveryTime,
 		buyerInstruction: req.body.buyerInstruction,
 	});
 	service
