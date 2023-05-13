@@ -20,4 +20,9 @@ const serviceSchema = mongoose.Schema({
 	buyerInstruction: { type: String, required: false },
 });
 
+serviceSchema.statics.getServicesByCategoryId = function (categoryId) {
+	return this.find({ category: categoryId });
+  };
+  
+
 module.exports = mongoose.model("Service", serviceSchema);
