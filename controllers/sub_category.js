@@ -88,8 +88,8 @@ exports.designPhotoEditingServices = (req, res) => {
 	res.redirect("/design/photo-editing-services");
 };
 //programming and developement
-exports.programmingDevelopmentCssHtmlProgramming = (req, res) => {
-	res.redirect("/programming-development/css-html-programming");
+exports.programmingDevelopmentHtmlCssProgramming = (req, res) => {
+	res.redirect("/programming-development/html-css-programming");
 };
 
 exports.programmingDevelopmentJavaDotNetProgramming = (req, res) => {
