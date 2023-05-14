@@ -22,7 +22,7 @@ const serviceSchema = mongoose.Schema({
 
 serviceSchema.statics.getServicesByCategoryId = function (categoryId) {
 	return this.find({ category: categoryId });
-  };
+};
   
 
 module.exports = mongoose.model("Service", serviceSchema);
