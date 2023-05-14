@@ -9,8 +9,6 @@ const {
 	GraphQLList,
 } = require("graphql");
 
-var i = 0;
-
 // sub-category type
 const SubCategoryType = new GraphQLObjectType({
 	name: "SubCategory",

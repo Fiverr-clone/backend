@@ -6,5 +6,6 @@ const multer = require("../middleware/multer-config");
 const auth = require("../middleware/auth");
 
 router.post("/add-service", auth, multer, serviceCtrl.addService);
+router.post("/services/:subcategoryId", serviceCtrl.getServicesBySubCat);
 
 module.exports = router;
