@@ -9,4 +9,8 @@ const sub_categorySchema = mongoose.Schema({
 	},
 });
 
+sub_categorySchema.statics.getSubCategoryById = function (subcategoryId) {
+	return this.findById(subcategoryId).exec();
+};
+
 module.exports = mongoose.model("SubCategory", sub_categorySchema);

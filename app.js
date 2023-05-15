@@ -1,13 +1,20 @@
 const express = require("express");
+const cors = require("cors");
 require("dotenv").config();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const path = require("path");
 
+const schema = require("./schema/schema");
+const { graphqlHTTP } = require("express-graphql");
+
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.CLUSTER_USERNAME}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 
 const userRoutes = require("./routes/user");
+const serviceRoutes = require("./routes/service");
+const categoryRoutes = require("./routes/category");
+const subCategoryRoutes = require("./routes/sub_category");
 const app = express();
 
 mongoose
@@ -23,6 +30,7 @@ mongoose
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cors());
 
 app.use((req, res, next) => {
 	res.setHeader("Access-Control-Allow-Origin", "*");
@@ -39,8 +47,9 @@ app.use((req, res, next) => {
 
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-const schema = require("./schema/schema");
-const { graphqlHTTP } = require("express-graphql");
+app.use("/api", serviceRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/sub-category", subCategoryRoutes);
 
 app.use(
 	"/graphql",

@@ -23,6 +23,9 @@ const serviceSchema = mongoose.Schema({
 serviceSchema.statics.getServicesByCategoryId = function (categoryId) {
 	return this.find({ category: categoryId });
 };
-  
+
+serviceSchema.statics.getServicesBySubCategoryId = function (subcategoryId) {
+	return this.find({ subCategory: subcategoryId });
+};
 
 module.exports = mongoose.model("Service", serviceSchema);

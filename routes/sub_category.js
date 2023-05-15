@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const subCategoryController = require("../controllers/sub_category");
+
+// GET subcategory by ID and populate category
+router.get("/:id", subCategoryController.getSubCategoryById);
+
 //category online courses
 router.get(
 	"/online-courses/learn-programming",
@@ -95,7 +99,5 @@ router.get(
 	"/programming-development/wordpress-services",
 	subCategoryController.programmingDevelopmentWordpressServices
 );
-// GET subcategory by ID and populate category
-router.get("/:id", subCategoryController.getSubCategoryById);
 
 module.exports = router;
