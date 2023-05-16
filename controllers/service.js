@@ -1,17 +1,20 @@
 const Service = require("../models/service");
 
-const Category = require("../models/category");
-const SubCategory = require("../models/sub_category");
+// const Category = require("../models/category");
+// const SubCategory = require("../models/sub_category");
 
-const {
-	GraphQLObjectType,
-	GraphQLString,
-	GraphQLID,
-	GraphQLSchema,
-	GraphQLList,
-} = require("graphql");
+// const {
+// 	GraphQLObjectType,
+// 	GraphQLString,
+// 	GraphQLID,
+// 	GraphQLSchema,
+// 	GraphQLList,
+// } = require("graphql");
 
 exports.addService = (req, res, next) => {
+	console.log("body => ", req.body);
+	console.log("file => ", req.file);
+
 	const service = new Service({
 		userId: req.user.userId,
 		title: req.body.title,
@@ -26,6 +29,8 @@ exports.addService = (req, res, next) => {
 	service
 		.save()
 		.then(() => {
+			console.log("body => ", req.body);
+			console.log("file => ", req.file);
 			res.status(201).json({
 				message: "Service added successfully!",
 			});

@@ -2,27 +2,37 @@ require("dotenv").config();
 
 const multer = require("multer");
 
-const cloudinary = require("cloudinary");
+const cloudinary = require("cloudinary").v2;
 
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-
-const { CLOUDINARY_HOST, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } =
-	process.env;
+const MIME_TYPE = {
+	"image/jpg": "jpg",
+	"image/jpeg": "jpg",
+	"image/png": "png",
+	"image/gif": "gif",
+	"image/x-icon": "ico",
+};
 
 cloudinary.config({
-	cloud_name: CLOUDINARY_HOST,
-	api_key: CLOUDINARY_API_KEY,
-	api_secret: CLOUDINARY_API_SECRET,
+	cloud_name: process.env.CLOUDINARY_HOST,
+	api_key: process.env.CLOUDINARY_API_KEY,
+	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const storage = new CloudinaryStorage({
 	cloudinary: cloudinary,
-	params: {
-		folder: "services",
-		format: async (req, file) => "png", // supports promises as well
-		public_id: (req, file) => file.originalname,
+	params: (req, file) => {
+		const name = file.originalname.split(" ").join("_").split(".")[0];
+		const extension = MIME_TYPE[file.mimetype];
+		const timestamp = Date.now();
+		const publicId = `${name}-${timestamp}`;
+		// const publicId = `${name}-${timestamp}.${extension}`;
+		return {
+			folder: "uploads",
+			public_id: publicId,
+			format: extension,
+		};
 	},
 });
 
-const parser = multer({ storage: storage });
-module.exports = parser;
+module.exports = multer({ storage: storage }).single("image");
