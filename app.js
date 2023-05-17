@@ -17,8 +17,6 @@ const userRoutes = require("./routes/user");
 const serviceRoutes = require("./routes/service");
 const categoryRoutes = require("./routes/category");
 const subCategoryRoutes = require("./routes/sub_category");
-
-const cloudinaryDb = require("./routes/cloudinaryUpload");
 const app = express();
 
 mongoose
@@ -64,6 +62,5 @@ app.use(
 );
 
 app.use("/api", userRoutes);
-app.use("/api", cloudinaryDb);
 
 module.exports = app;
