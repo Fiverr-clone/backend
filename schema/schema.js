@@ -10,6 +10,7 @@ const {
 	GraphQLList,
 	GraphQLSchema,
 	GraphQLNonNull,
+	GraphQLInt,
 } = require("graphql");
 
 // Service
@@ -22,7 +23,7 @@ const ServiceType = new GraphQLObjectType({
 			username: { type: GraphQLID },
 			type: UserType,
 			resolve(parent, args) {
-				return User.findById(parent.userId); // Retrieve the user based on the userId
+				return User.findById(parent.userId);
 			},
 		},
 		title: { type: GraphQLString },
@@ -42,8 +43,16 @@ const CategoryType = new GraphQLObjectType({
 		categoryName: { type: GraphQLString },
 		services: {
 			type: new GraphQLList(ServiceType),
-			resolve(parent, args) {
-				return Service.find({ category: parent.id });
+			args: {
+				page: { type: GraphQLInt },
+				limit: { type: GraphQLInt },
+			},
+			resolve(parent, { page, limit }) {
+				const skip = (page - 1) * limit;
+				return Service.find({ category: parent.id })
+					.sort({ _id: -1 })
+					.skip(skip)
+					.limit(limit);
 			},
 		},
 	}),
@@ -63,8 +72,16 @@ const SubCategoryType = new GraphQLObjectType({
 		},
 		services: {
 			type: new GraphQLList(ServiceType),
-			resolve(parent, args) {
-				return Service.find({ subCategory: parent.id });
+			args: {
+				page: { type: GraphQLInt },
+				limit: { type: GraphQLInt },
+			},
+			resolve(parent, { page, limit }) {
+				const skip = (page - 1) * limit;
+				return Service.find({ subCategory: parent.id })
+					.sort({ _id: -1 })
+					.skip(skip)
+					.limit(limit);
 			},
 		},
 	}),
@@ -76,10 +93,24 @@ const UserType = new GraphQLObjectType({
 	fields: () => ({
 		id: { type: GraphQLID },
 		username: { type: GraphQLID },
+		services: {
+			type: new GraphQLList(ServiceType),
+			args: {
+				page: { type: GraphQLInt },
+				limit: { type: GraphQLInt },
+			},
+			resolve(parent, { page, limit }) {
+				const skip = (page - 1) * limit;
+				return Service.find({ userId: parent.id })
+					.sort({ _id: -1 })
+					.skip(skip)
+					.limit(limit);
+			},
+		},
 	}),
 });
 
-// Définissez la racine de la requête (Root Query)
+// racine de la requête (Root Query)
 const RootQuery = new GraphQLObjectType({
 	name: "RootQueryType",
 	fields: {
@@ -97,7 +128,41 @@ const RootQuery = new GraphQLObjectType({
 				return SubCategory.findById(args.id);
 			},
 		},
+		user: {
+			type: UserType,
+			args: { id: { type: GraphQLNonNull(GraphQLID) } },
+			resolve(parent, args) {
+				return User.findById(args.id);
+			},
+		},
 	},
 });
 
-module.exports = new GraphQLSchema({ query: RootQuery });
+// Mutation
+const RootMutation = new GraphQLObjectType({
+	name: "RootMutationType",
+	fields: {
+		deleteService: {
+			type: GraphQLString,
+			args: {
+				serviceId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { serviceId }) {
+				// Delete the service with the provided serviceId
+				return Service.findByIdAndDelete(serviceId)
+					.then(() => {
+						console.log("Service deleted successfully");
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Failed to delete service");
+					});
+			},
+		},
+	},
+});
+
+module.exports = new GraphQLSchema({
+	query: RootQuery,
+	mutation: RootMutation,
+});
