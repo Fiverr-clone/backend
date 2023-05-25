@@ -1,6 +1,7 @@
 const Category = require("../models/category");
 const SubCategory = require("../models/sub_category");
 const Service = require("../models/service");
+const User = require("../models/user");
 
 const {
 	GraphQLObjectType,
@@ -11,22 +12,29 @@ const {
 	GraphQLNonNull,
 } = require("graphql");
 
-// Définissez le type Service
+// Service
 const ServiceType = new GraphQLObjectType({
 	name: "Service",
 	fields: () => ({
 		id: { type: GraphQLID },
+		userId: { type: GraphQLID },
+		user: {
+			username: { type: GraphQLID },
+			type: UserType,
+			resolve(parent, args) {
+				return User.findById(parent.userId); // Retrieve the user based on the userId
+			},
+		},
 		title: { type: GraphQLString },
 		description: { type: GraphQLString },
 		image: { type: GraphQLString },
 		price: { type: GraphQLString },
 		deliveryTime: { type: GraphQLString },
 		buyerInstruction: { type: GraphQLString },
-		// Définissez les autres champs du service ici
 	}),
 });
 
-// Définissez le type Category
+//Category
 const CategoryType = new GraphQLObjectType({
 	name: "Category",
 	fields: () => ({
@@ -35,7 +43,6 @@ const CategoryType = new GraphQLObjectType({
 		services: {
 			type: new GraphQLList(ServiceType),
 			resolve(parent, args) {
-				// Récupérez les services ayant l'ID de la catégorie parent
 				return Service.find({ category: parent.id });
 			},
 		},
@@ -57,10 +64,18 @@ const SubCategoryType = new GraphQLObjectType({
 		services: {
 			type: new GraphQLList(ServiceType),
 			resolve(parent, args) {
-				// Récupérez les services ayant l'ID de la catégorie parent
 				return Service.find({ subCategory: parent.id });
 			},
 		},
+	}),
+});
+
+// User
+const UserType = new GraphQLObjectType({
+	name: "User",
+	fields: () => ({
+		id: { type: GraphQLID },
+		username: { type: GraphQLID },
 	}),
 });
 
@@ -72,7 +87,6 @@ const RootQuery = new GraphQLObjectType({
 			type: CategoryType,
 			args: { id: { type: GraphQLNonNull(GraphQLID) } },
 			resolve(parent, args) {
-				// Récupérez la catégorie par son ID
 				return Category.findById(args.id);
 			},
 		},
@@ -80,7 +94,6 @@ const RootQuery = new GraphQLObjectType({
 			type: SubCategoryType,
 			args: { id: { type: GraphQLNonNull(GraphQLID) } },
 			resolve(parent, args) {
-				// Récupérez la catégorie par son ID
 				return SubCategory.findById(args.id);
 			},
 		},
@@ -88,58 +101,3 @@ const RootQuery = new GraphQLObjectType({
 });
 
 module.exports = new GraphQLSchema({ query: RootQuery });
-
-// const Category = require("../models/category");
-// const Service = require("../models/service");
-
-// const {
-//   GraphQLObjectType,
-//   GraphQLID,
-//   GraphQLString,
-//   GraphQLList,
-//   GraphQLSchema,
-//   GraphQLNonNull, // Importez ce module supplémentaire pour gérer les arguments obligatoires
-// } = require('graphql');
-
-// // Définissez le type Service
-// const ServiceType = new GraphQLObjectType({
-//   name: 'Service',
-//   fields: () => ({
-//     id: { type: GraphQLID },
-//     title: { type: GraphQLString },
-//     // Définissez les autres champs du service ici
-//   }),
-// });
-
-// // Définissez le type Category
-// const CategoryType = new GraphQLObjectType({
-//   name: 'Category',
-//   fields: () => ({
-//     id: { type: GraphQLID },
-//     name: { type: GraphQLString },
-//     services: {
-//       type: new GraphQLList(ServiceType),
-//       resolve(parent, args) {
-//         // Récupérez les services ayant l'ID de la catégorie parent
-//         return Service.getServicesByCategoryId(parent.id);
-//       },
-//     },
-//   }),
-// });
-
-// // Définissez la racine de la requête (Root Query)
-// const RootQuery = new GraphQLObjectType({
-//   name: 'RootQueryType',
-//   fields: {
-//     category: {
-//       type: CategoryType,
-//       args: { id: { type: GraphQLNonNull(GraphQLID) } },
-//       resolve(parent, args) {
-//         // Récupérez la catégorie par son ID
-//         return Category.getCategoryById(args.id);
-//       },
-//     },
-//   },
-// });
-
-// module.exports = new GraphQLSchema({ query: RootQuery });
