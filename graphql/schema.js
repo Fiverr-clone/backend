@@ -2,6 +2,7 @@ const Category = require("../models/category");
 const SubCategory = require("../models/sub_category");
 const Service = require("../models/service");
 const User = require("../models/user");
+const Order = require("../models/order");
 
 const {
 	GraphQLObjectType,
@@ -11,6 +12,7 @@ const {
 	GraphQLSchema,
 	GraphQLNonNull,
 	GraphQLInt,
+	GraphQLBoolean,
 } = require("graphql");
 
 // Service
@@ -19,8 +21,10 @@ const ServiceType = new GraphQLObjectType({
 	fields: () => ({
 		id: { type: GraphQLID },
 		userId: { type: GraphQLID },
+		category: { type: GraphQLID },
+		subCategory: { type: GraphQLID },
 		user: {
-			username: { type: GraphQLID },
+			username: { type: GraphQLString },
 			type: UserType,
 			resolve(parent, args) {
 				return User.findById(parent.userId);
@@ -110,6 +114,34 @@ const UserType = new GraphQLObjectType({
 	}),
 });
 
+// Order
+const OrderType = new GraphQLObjectType({
+	name: "Order",
+	fields: () => ({
+		id: { type: GraphQLID },
+		service: {
+			type: ServiceType,
+			resolve(parent, args) {
+				return Service.findById(parent.serviceId);
+			},
+		},
+		seller: {
+			type: UserType,
+			resolve(parent, args) {
+				return User.findById(parent.sellerId);
+			},
+		},
+		buyer: {
+			type: UserType,
+			resolve(parent, args) {
+				return User.findById(parent.buyerId);
+			},
+		},
+		isCompleted: { type: GraphQLBoolean },
+		createdAt: { type: GraphQLString },
+	}),
+});
+
 // Root Query
 const RootQuery = new GraphQLObjectType({
 	name: "RootQueryType",
@@ -142,6 +174,24 @@ const RootQuery = new GraphQLObjectType({
 				return Service.findById(args.id);
 			},
 		},
+		ordersBySellerId: {
+			type: new GraphQLList(OrderType),
+			args: {
+				sellerId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { sellerId }) {
+				return Order.find({ sellerId, isComfirmed: true });
+			},
+		},
+		ordersByBuyerId: {
+			type: new GraphQLList(OrderType),
+			args: {
+				buyerId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { buyerId }) {
+				return Order.find({ buyerId });
+			},
+		},
 	},
 });
 
@@ -162,6 +212,83 @@ const RootMutation = new GraphQLObjectType({
 					.catch((err) => {
 						console.log(err);
 						throw new Error("Failed to delete service");
+					});
+			},
+		},
+		createOrder: {
+			type: OrderType,
+			args: {
+				serviceId: { type: GraphQLNonNull(GraphQLID) },
+				sellerId: { type: GraphQLNonNull(GraphQLID) },
+				buyerId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { serviceId, sellerId, buyerId }) {
+				const order = new Order({
+					serviceId,
+					sellerId,
+					buyerId,
+					isCompleted: false,
+					createdAt: Date.now(),
+				});
+				return order.save();
+			},
+		},
+		completeOrder: {
+			type: OrderType,
+			args: {
+				id: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { id }) {
+				return Order.findByIdAndUpdate(id, { isCompleted: true })
+					.then(() => {
+						console.log("Order marked as completed ");
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Failed to mark order as completed");
+					});
+			},
+		},
+		comfirmOrder: {
+			type: OrderType,
+			args: {
+				id: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { id }) {
+				return Order.findByIdAndUpdate(id, { isComfirmed: true })
+					.then(() => {
+						console.log("Order comfirmed ");
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Failed to mark order as comfirmed");
+					});
+			},
+		},
+		cancelOrder: {
+			type: OrderType,
+			args: {
+				id: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { id }) {
+				return Order.findById(id)
+					.then((order) => {
+						if (order.isComfirmed) {
+							throw new Error("Cannot cancel a confirmed order");
+						}
+						return Order.findByIdAndDelete(id)
+							.then(() => {
+								console.log("Order deleted successfully");
+								return order;
+							})
+							.catch((err) => {
+								console.log(err);
+								throw new Error("Failed to delete order");
+							});
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Order not found");
 					});
 			},
 		},

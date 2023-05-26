@@ -17,7 +17,7 @@ const orderSchema = mongoose.Schema({
 		required: true,
 	},
 	isCompleted: { type: Boolean, default: false },
+	isComfirmed: { type: Boolean, default: false },
 	createdAt: { type: Date, default: Date.now },
 });
-
 module.exports = mongoose.model("Order", orderSchema);
