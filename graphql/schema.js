@@ -21,8 +21,32 @@ const ServiceType = new GraphQLObjectType({
 	fields: () => ({
 		id: { type: GraphQLID },
 		userId: { type: GraphQLID },
-		category: { type: GraphQLID },
-		subCategory: { type: GraphQLID },
+		category: {
+			type: CategoryType,
+			resolve(parent, args) {
+				return Category.findById(parent.category)
+					.then((category) => {
+						return category;
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Failed to fetch category");
+					});
+			},
+		},
+		subCategory: {
+			type: SubCategoryType,
+			resolve(parent, args) {
+				return SubCategory.findById(parent.subCategory)
+					.then((subCategory) => {
+						return subCategory;
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Failed to fetch subcategory");
+					});
+			},
+		},
 		user: {
 			username: { type: GraphQLString },
 			type: UserType,
