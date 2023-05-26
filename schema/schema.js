@@ -135,6 +135,13 @@ const RootQuery = new GraphQLObjectType({
 				return User.findById(args.id);
 			},
 		},
+		service: {
+			type: ServiceType,
+			args: { id: { type: GraphQLNonNull(GraphQLID) } },
+			resolve(parent, args) {
+				return Service.findById(args.id);
+			},
+		},
 	},
 });
 
@@ -148,7 +155,6 @@ const RootMutation = new GraphQLObjectType({
 				serviceId: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { serviceId }) {
-				// Delete the service with the provided serviceId
 				return Service.findByIdAndDelete(serviceId)
 					.then(() => {
 						console.log("Service deleted successfully");
