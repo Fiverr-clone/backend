@@ -8,7 +8,7 @@ const path = require("path");
 
 // const path = require("./uploads")
 
-const schema = require("./schema/schema");
+const graphqlSchema = require("./graphql/schema");
 const { graphqlHTTP } = require("express-graphql");
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.CLUSTER_USERNAME}/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -56,7 +56,7 @@ app.use("/api/sub-category", subCategoryRoutes);
 app.use(
 	"/graphql",
 	graphqlHTTP({
-		schema,
+		schema: graphqlSchema,
 		graphiql: true,
 	})
 );

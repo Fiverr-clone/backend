@@ -6,10 +6,4 @@ router.get("/", categoryCtrl.getAllCategories);
 
 router.get("/:categoryId", categoryCtrl.getCategoryById);
 
-router.get("/online-courses", categoryCtrl.onlineCourses);
-router.get("/digital-marketing", categoryCtrl.digitalMarketing);
-router.get("/writing-translation", categoryCtrl.writingTranslation);
-router.get("/design", categoryCtrl.design);
-router.get("/programming-development", categoryCtrl.programmingDevelopment);
-
 module.exports = router;

@@ -110,7 +110,7 @@ const UserType = new GraphQLObjectType({
 	}),
 });
 
-// racine de la requête (Root Query)
+// Root Query
 const RootQuery = new GraphQLObjectType({
 	name: "RootQueryType",
 	fields: {
