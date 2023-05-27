@@ -1,8 +1,14 @@
+const User = require("../models/user");
+
 const Category = require("../models/category");
 const SubCategory = require("../models/sub_category");
 const Service = require("../models/service");
-const User = require("../models/user");
 const Order = require("../models/order");
+const Conversation = require("../models/conversation");
+const Message = require("../models/message");
+
+
+
 
 const {
 	GraphQLObjectType,
@@ -14,6 +20,7 @@ const {
 	GraphQLInt,
 	GraphQLBoolean,
 } = require("graphql");
+const { default: conversation } = require("../models/conversation");
 
 // Service
 const ServiceType = new GraphQLObjectType({
@@ -48,12 +55,12 @@ const ServiceType = new GraphQLObjectType({
 			},
 		},
 		user: {
-			username: { type: GraphQLString },
 			type: UserType,
 			resolve(parent, args) {
 				return User.findById(parent.userId);
 			},
 		},
+		
 		title: { type: GraphQLString },
 		description: { type: GraphQLString },
 		image: { type: GraphQLString },
@@ -95,9 +102,10 @@ const SubCategoryType = new GraphQLObjectType({
 		category: {
 			type: CategoryType,
 			resolve(parent, args) {
-				return Category.findById(parent.category_id);
+				return Category.findById(parent.category);
 			},
 		},
+		
 		services: {
 			type: new GraphQLList(ServiceType),
 			args: {
@@ -163,7 +171,61 @@ const OrderType = new GraphQLObjectType({
 			},
 		},
 		isCompleted: { type: GraphQLBoolean },
-		createdAt: { type: GraphQLString },
+		isComfirmed: { type: GraphQLBoolean},
+		createdAt: { type: GraphQLString},
+	}),
+});
+
+//Conversation
+const ConversationType = new GraphQLObjectType({
+	name: "Conversation",
+	fields: () => ({
+		id: { type: GraphQLID },
+		seller: {
+			type: UserType,
+			resolve(parent, args) {
+				return User.findById(parent.sellerId);
+			},
+		},
+		buyer: {
+			type: UserType,
+			resolve(parent, args) {
+				return User.findById(parent.buyerId);
+			},
+		},
+		
+		
+		
+		readBySeller: { type: GraphQLBoolean, },
+		readByBuyer: { type:GraphQLBoolean, },
+				lastMessage: { type: GraphQLString },
+	}),
+});
+
+//Message
+
+const MessageType = new GraphQLObjectType({
+	name: "Message",
+	fields: () => ({
+		id: { type: GraphQLID },
+		User: {
+			type: UserType,
+			resolve(parent, args) {
+				return User.findById(parent.userId);
+			},
+		},
+		Conversation: {
+			type: ConversationType,
+			resolve(parent, args) {
+				return Conversation.findById(parent.conversationId);
+			},
+		},
+		
+		
+		
+		
+		desc: { type: GraphQLString },
+		
 	}),
 });
 
@@ -217,6 +279,60 @@ const RootQuery = new GraphQLObjectType({
 				return Order.find({ buyerId });
 			},
 		},
+		conversationsByBuyerId: {
+			type: new GraphQLList(ConversationType),
+			args: {
+				buyerId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { buyerId }) {
+				return Conversation.find({ buyerId });
+			},
+		},
+		conversationsBySellerId: {
+			type: new GraphQLList(ConversationType),
+			args: {
+				sellerId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { sellerId }) {
+				return Conversation.find({ sellerId });
+			},
+		},
+		getConversations: {
+			type: new GraphQLList(ConversationType),
+			resolve(parent, args) {
+				return Conversation.find().sort({ updatedAt: -1 }).exec();
+			},
+		},
+		messageByUserId: {
+			type: new GraphQLList(MessageType),
+			args: {
+				userId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { buyerId }) {
+				return Message.find({ userId });
+			},
+		},
+		messages: {
+			type: GraphQLList(MessageType),
+			args: {
+				conversationId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { conversationId }) {
+				return Message.find({ conversationId }).sort({ createdAt: 1 });
+			},
+		},
+		conversations: {
+			type: GraphQLList(ConversationType),
+			args: {
+				userId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { userId }) {
+				return Conversation.find({
+					$or: [{ sellerId: userId }, { buyerId: userId }],
+				}).sort({ updatedAt: -1 });
+			},
+		},
+				
 	},
 });
 
@@ -317,7 +433,134 @@ const RootMutation = new GraphQLObjectType({
 					});
 			},
 		},
-	},
+
+		createConversation: {
+			type: ConversationType,
+			args: {
+				sellerId: { type: GraphQLNonNull(GraphQLID) },
+				buyerId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { sellerId, buyerId }) {
+				const conversation = new Conversation({
+					sellerId,
+					buyerId,
+				});
+		
+				return conversation.save();
+			},
+		},
+		
+		
+		
+		  
+
+		updateConversation: {
+			type: ConversationType,
+			args: {
+				conversationId: { type: GraphQLNonNull(GraphQLID) },
+				readBySeller: { type: GraphQLBoolean },
+				readByBuyer: { type: GraphQLBoolean },
+			},
+			async resolve(parent, { conversationId, readBySeller, readByBuyer }) {
+				try {
+					const updatedConversation = await Conversation.findOneAndUpdate(
+						{ _id: conversationId },
+						{
+							$set: {
+								...(readBySeller ? { readBySeller: true } : {}),
+								...(readByBuyer ? { readByBuyer: true } : {}),
+							},
+						},
+						{ new: true }
+					);
+		
+					return updatedConversation;
+				} catch (err) {
+					throw new Error("Failed to update conversation");
+				}
+			},
+		},
+		
+	  
+		  getSingleConversation: {
+			type: ConversationType,
+			args: {
+			  conversationId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			async resolve(parent, { conversationId }) {
+			  try {
+				const conversation = await Conversation.findOne({ id: conversationId });
+				if (!conversation) {
+				  throw new Error("Conversation not found");
+				}
+				return conversation;
+			  } catch (err) {
+				throw new Error("Failed to fetch conversation");
+			  }
+			},
+		  },
+	  
+		  getConversations: {
+			type: new GraphQLList(ConversationType),
+			async resolve(parent, args) {
+			  try {
+				const conversations = await Conversation.find().sort({ updatedAt: -1 });
+				return conversations;
+			  } catch (err) {
+				throw new Error("Failed to fetch conversations");
+			  }
+			},
+		  },
+		  createMessage: {
+			type: MessageType,
+			args: {
+				conversationId: { type: GraphQLNonNull(GraphQLID) },
+				userId: { type: GraphQLNonNull(GraphQLID) },
+				desc: { type: GraphQLNonNull(GraphQLString) },
+			},
+			async resolve(parent, { conversationId, userId, desc }) {
+				try {
+					const newMessage = new Message({
+						conversationId,
+						userId,
+						desc,
+					});
+		
+					const savedMessage = await newMessage.save();
+		
+					await Conversation.findOneAndUpdate(
+						{ _id: conversationId },
+						{
+							$set: {
+								lastMessage: desc,
+							},
+						},
+						{ new: true }
+					);
+		
+					return savedMessage;
+				} catch (err) {
+					throw new Error("Failed to create message");
+				}
+			},
+		},
+		
+		  getMessages: {
+			type: new GraphQLList(MessageType),
+			args: {
+			  conversationId: { type: GraphQLNonNull(GraphQLID) },
+			},
+			async resolve(parent, { conversationId }) {
+			  try {
+				const messages = await Message.find({ conversationId });
+				return messages;
+			  } catch (err) {
+				throw new Error("Failed to fetch messages");
+			  }
+			},
+		  },
+		},
+	
 });
 module.exports = new GraphQLSchema({
 	query: RootQuery,
