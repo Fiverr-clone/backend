@@ -163,6 +163,7 @@ const OrderType = new GraphQLObjectType({
 			},
 		},
 		isCompleted: { type: GraphQLBoolean },
+		isComfirmed: { type: GraphQLBoolean },
 		createdAt: { type: GraphQLString },
 	}),
 });

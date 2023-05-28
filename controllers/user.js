@@ -78,8 +78,8 @@ exports.signin = (req, res, next) => {
 					});
 					// res.cookie("userId", user._id, { maxAge: 3600000 });
 					// res.cookie("token", token, { httpOnly: true }, { maxAge: 3600000 });
-					res.cookie("userId", user._id, { maxAge: 3600000 });
-					res.cookie("token", token, { maxAge: 3600000 });
+					res.cookie("userId", user._id, { maxAge: 259200000 });
+					res.cookie("token", token, { maxAge: 259200000 });
 
 					emailToken.deleteOne({ userId: user._id }).exec();
 
