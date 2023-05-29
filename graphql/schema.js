@@ -193,6 +193,8 @@ const ConversationType = new GraphQLObjectType({
 		},
 		readByUser: { type: GraphQLBoolean },
 		lastMessage: { type: GraphQLString },
+		// createdAt: { type: GraphQLString },
+		// updatedAt: { type: GraphQLString },
 	}),
 });
 
@@ -278,25 +280,6 @@ const RootQuery = new GraphQLObjectType({
 			},
 		},
 
-		// CONVERSATION
-		// conversationsByTransmitterId: {
-		// 	type: new GraphQLList(ConversationType),
-		// 	args: {
-		// 		transmitterId: { type: GraphQLNonNull(GraphQLID) },
-		// 	},
-		// 	resolve(parent, { transmitterId }) {
-		// 		return Conversation.find({ transmitterId });
-		// 	},
-		// },
-		// conversationsByReceiverId: {
-		// 	type: new GraphQLList(ConversationType),
-		// 	args: {
-		// 		receiverId: { type: GraphQLNonNull(GraphQLID) },
-		// 	},
-		// 	resolve(parent, { receiverId }) {
-		// 		return Conversation.find({ receiverId });
-		// 	},
-		// },
 		conversationsByUserId: {
 			type: GraphQLList(ConversationType),
 			args: {
@@ -308,7 +291,6 @@ const RootQuery = new GraphQLObjectType({
 				}).sort({ updatedAt: -1 });
 			},
 		},
-
 		conversation: {
 			type: ConversationType,
 			args: { id: { type: GraphQLNonNull(GraphQLID) } },
@@ -322,7 +304,7 @@ const RootQuery = new GraphQLObjectType({
 			args: {
 				userId: { type: GraphQLNonNull(GraphQLID) },
 			},
-			resolve(parent, { buyerId }) {
+			resolve(parent, { userId }) {
 				return Message.find({ userId });
 			},
 		},
@@ -451,7 +433,6 @@ const RootMutation = new GraphQLObjectType({
 				receiverId: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { transmitterId, receiverId }) {
-				// Check if conversation already exists in either direction
 				return Conversation.findOne({
 					$or: [
 						{ transmitterId, receiverId },
@@ -459,10 +440,8 @@ const RootMutation = new GraphQLObjectType({
 					],
 				}).then((existingConversation) => {
 					if (existingConversation) {
-						// Conversation already exists
 						throw new Error("Conversation already exists");
 					} else {
-						// Create new conversation
 						const conversation = new Conversation({
 							transmitterId,
 							receiverId,
@@ -478,10 +457,9 @@ const RootMutation = new GraphQLObjectType({
 				id: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { id }) {
-				return Conversation.findOneAndUpdate(id, { readByUser: true });
+				return Conversation.findOneAndUpdate({ _id: id }, { readByUser: true });
 			},
 		},
-
 		createMessage: {
 			type: MessageType,
 			args: {
@@ -493,12 +471,9 @@ const RootMutation = new GraphQLObjectType({
 				try {
 					const newMessage = new Message({
 						conversationId,
-
 						desc,
 					});
-
 					const savedMessage = await newMessage.save();
-
 					await Conversation.findOneAndUpdate(
 						{ _id: conversationId },
 						{
@@ -508,14 +483,12 @@ const RootMutation = new GraphQLObjectType({
 						},
 						{ new: true }
 					);
-
 					return savedMessage;
 				} catch (err) {
 					throw new Error("Failed to create message");
 				}
 			},
 		},
-
 		//   getMessages: {
 		// 	type: new GraphQLList(MessageType),
 		// 	args: {
