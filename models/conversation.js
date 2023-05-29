@@ -6,24 +6,21 @@ const ConversationSchema = new Schema(
   {
     
     
-    sellerId: {
+    userId: {
       type: String,
       ref: 'User',
       // required: true,
     },
-    buyerId: {
+    receiverId: {
       type: String,
       ref: 'User',
       // required: true,
     },
-    readBySeller: {
+    readByUser: {
       type: Boolean,
       // required: true,
     },
-    readByBuyer: {
-      type: Boolean,
-      // required: true,
-    },
+    
     lastMessage: {
       type: String,
       required: false,

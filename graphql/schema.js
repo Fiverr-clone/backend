@@ -184,20 +184,20 @@ const ConversationType = new GraphQLObjectType({
 			},
 		},
 		//id: { type: GraphQLID },
-		seller: {
+		user: {
 			type: UserType,
 			resolve(parent, args) {
-				return User.findById(parent.sellerId);
+				return User.findById(parent.userId);
 			},
 		},
-		buyer: {
+		receiver: {
 			type: UserType,
 			resolve(parent, args) {
-				return User.findById(parent.buyerId);
+				return User.findById(parent.receiverId);
 			},
 		},
-		readBySeller: { type: GraphQLBoolean },
-		readByBuyer: { type: GraphQLBoolean },
+		readByUser: { type: GraphQLBoolean },
+		
 		lastMessage: { type: GraphQLString },
 	}),
 });
@@ -283,30 +283,30 @@ const RootQuery = new GraphQLObjectType({
 				}).sort({ createdAt: -1 });
 			},
 		},
-		conversationsByBuyerId: {
+		// conversationsByReceiverId: {
+		// 	type: new GraphQLList(ConversationType),
+		// 	args: {
+		// 		receiverId: { type: GraphQLNonNull(GraphQLID) },
+		// 	},
+		// 	resolve(parent, { buyerId }) {
+		// 		return Conversation.find({ receiverId });
+		// 	},
+		// },
+		conversationsByUserId: {
 			type: new GraphQLList(ConversationType),
 			args: {
-				buyerId: { type: GraphQLNonNull(GraphQLID) },
-			},
-			resolve(parent, { buyerId }) {
-				return Conversation.find({ buyerId });
-			},
-		},
-		conversationsBySellerId: {
-			type: new GraphQLList(ConversationType),
-			args: {
-				sellerId: { type: GraphQLNonNull(GraphQLID) },
+				userId: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { sellerId }) {
-				return Conversation.find({ sellerId });
+				return Conversation.find({ userId });
 			},
 		},
-		getConversations: {
-			type: new GraphQLList(ConversationType),
-			resolve(parent, args) {
-				return Conversation.find().sort({ updatedAt: -1 }).exec();
-			},
-		},
+		// getConversations: {
+		// 	type: new GraphQLList(ConversationType),
+		// 	resolve(parent, args) {
+		// 		return Conversation.find().sort({ updatedAt: -1 }).exec();
+		// 	},
+		// },
 		messageByUserId: {
 			type: new GraphQLList(MessageType),
 			args: {
@@ -333,7 +333,7 @@ const RootQuery = new GraphQLObjectType({
 			},
 			resolve(parent, { userId }) {
 				return Conversation.find({
-					$or: [{ sellerId: userId }, { buyerId: userId }],
+					$or: [{ userId: userId }, { receiverId: userId }],
 				}).sort({ updatedAt: -1 });
 			},
 		},
@@ -449,13 +449,13 @@ const RootMutation = new GraphQLObjectType({
 		createConversation: {
 			type: ConversationType,
 			args: {
-				sellerId: { type: GraphQLNonNull(GraphQLID) },
-				buyerId: { type: GraphQLNonNull(GraphQLID) },
+				userId: { type: GraphQLNonNull(GraphQLID) },
+				receiverId: { type: GraphQLNonNull(GraphQLID) },
 			},
-			resolve(parent, { sellerId, buyerId }) {
+			resolve(parent, { userId, receiverId }) {
 				const conversation = new Conversation({
-					sellerId,
-					buyerId,
+					userId,
+					receiverId,
 				});
 
 				return conversation.save();
@@ -466,17 +466,17 @@ const RootMutation = new GraphQLObjectType({
 			type: ConversationType,
 			args: {
 				conversationId: { type: GraphQLNonNull(GraphQLID) },
-				readBySeller: { type: GraphQLBoolean },
-				readByBuyer: { type: GraphQLBoolean },
+				readByUser: { type: GraphQLBoolean },
+				
 			},
-			async resolve(parent, { conversationId, readBySeller, readByBuyer }) {
+			async resolve(parent, { conversationId, readByUser }) {
 				try {
 					const updatedConversation = await Conversation.findOneAndUpdate(
 						{ _id: conversationId },
 						{
 							$set: {
-								...(readBySeller ? { readBySeller: true } : {}),
-								...(readByBuyer ? { readByBuyer: true } : {}),
+								...(readByUser ? { readByUser: true } : {}),
+								
 							},
 						},
 						{ new: true }
@@ -489,39 +489,39 @@ const RootMutation = new GraphQLObjectType({
 			},
 		},
 
-		getSingleConversation: {
-			type: ConversationType,
-			args: {
-				conversationId: { type: GraphQLNonNull(GraphQLID) },
-			},
-			async resolve(parent, { conversationId }) {
-				try {
-					const conversation = await Conversation.findOne({
-						id: conversationId,
-					});
-					if (!conversation) {
-						throw new Error("Conversation not found");
-					}
-					return conversation;
-				} catch (err) {
-					throw new Error("Failed to fetch conversation");
-				}
-			},
-		},
+		// getSingleConversation: {
+		// 	type: ConversationType,
+		// 	args: {
+		// 		conversationId: { type: GraphQLNonNull(GraphQLID) },
+		// 	},
+		// 	async resolve(parent, { conversationId }) {
+		// 		try {
+		// 			const conversation = await Conversation.findOne({
+		// 				id: conversationId,
+		// 			});
+		// 			if (!conversation) {
+		// 				throw new Error("Conversation not found");
+		// 			}
+		// 			return conversation;
+		// 		} catch (err) {
+		// 			throw new Error("Failed to fetch conversation");
+		// 		}
+		// 	},
+		// },
 
-		getConversations: {
-			type: new GraphQLList(ConversationType),
-			async resolve(parent, args) {
-				try {
-					const conversations = await Conversation.find().sort({
-						updatedAt: -1,
-					});
-					return conversations;
-				} catch (err) {
-					throw new Error("Failed to fetch conversations");
-				}
-			},
-		},
+		// getConversations: {
+		// 	type: new GraphQLList(ConversationType),
+		// 	async resolve(parent, args) {
+		// 		try {
+		// 			const conversations = await Conversation.find().sort({
+		// 				updatedAt: -1,
+		// 			});
+		// 			return conversations;
+		// 		} catch (err) {
+		// 			throw new Error("Failed to fetch conversations");
+		// 		}
+		// 	},
+		// },
 		createMessage: {
 			type: MessageType,
 			args: {
@@ -533,7 +533,7 @@ const RootMutation = new GraphQLObjectType({
 				try {
 					const newMessage = new Message({
 						conversationId,
-						userId,
+				
 						desc,
 					});
 
