@@ -180,7 +180,13 @@ const OrderType = new GraphQLObjectType({
 const ConversationType = new GraphQLObjectType({
 	name: "Conversation",
 	fields: () => ({
-		id: { type: GraphQLID },
+		id: {
+			type: GraphQLID,
+			resolve(parent, args) {
+				return parent.id; // Assurez-vous que cette ligne renvoie la valeur de l'identifiant de la conversation
+			},
+		},
+		//id: { type: GraphQLID },
 		seller: {
 			type: UserType,
 			resolve(parent, args) {
@@ -312,9 +318,10 @@ const RootQuery = new GraphQLObjectType({
 				return Message.find({ userId });
 			},
 		},
-		messages: {
+		message: {
 			type: GraphQLList(MessageType),
 			args: {
+				userId: { type: GraphQLNonNull(GraphQLID) },
 				conversationId: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { conversationId }) {
@@ -545,23 +552,23 @@ const RootMutation = new GraphQLObjectType({
 			},
 		},
 		
-		  getMessages: {
-			type: new GraphQLList(MessageType),
-			args: {
-			  conversationId: { type: GraphQLNonNull(GraphQLID) },
-			},
-			async resolve(parent, { conversationId }) {
-			  try {
-				const messages = await Message.find({ conversationId });
-				return messages;
-			  } catch (err) {
-				throw new Error("Failed to fetch messages");
-			  }
-			},
-		  },
-		},
+		//   getMessages: {
+		// 	type: new GraphQLList(MessageType),
+		// 	args: {
+		// 	  conversationId: { type: GraphQLNonNull(GraphQLID) },
+		// 	},
+		// 	async resolve(parent, { conversationId }) {
+		// 	  try {
+		// 		const messages = await Message.find({ conversationId });
+		// 		return messages;
+		// 	  } catch (err) {
+		// 		throw new Error("Failed to fetch messages");
+		// 	  }
+		// 	},
+		//   },
+		 },
 	
-});
+	});
 module.exports = new GraphQLSchema({
 	query: RootQuery,
 	mutation: RootMutation,

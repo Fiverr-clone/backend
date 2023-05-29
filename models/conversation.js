@@ -4,11 +4,7 @@ const { Schema} = mongoose;
 
 const ConversationSchema = new Schema(
   {
-    id: {
-      type: mongoose.Schema.Types.ObjectId,
-      // required: true,
-      unique: true,
-    },
+    
     
     sellerId: {
       type: String,
