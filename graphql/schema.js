@@ -257,7 +257,11 @@ const RootQuery = new GraphQLObjectType({
 				sellerId: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { sellerId }) {
-				return Order.find({ sellerId, isComfirmed: true });
+				return Order.find({
+					sellerId,
+					isCompleted: false,
+					isComfirmed: true,
+				}).sort({ createdAt: -1 });
 			},
 		},
 		ordersByBuyerId: {
@@ -266,7 +270,11 @@ const RootQuery = new GraphQLObjectType({
 				buyerId: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { buyerId }) {
-				return Order.find({ buyerId, isCompleted: false });
+				return Order.find({
+					buyerId,
+					isCompleted: false,
+					isComfirmed: false,
+				}).sort({ createdAt: -1 });
 			},
 		},
 		conversationsByBuyerId: {
@@ -360,7 +368,15 @@ const RootMutation = new GraphQLObjectType({
 					isCompleted: false,
 					createdAt: Date.now(),
 				});
-				return order.save();
+				return order
+					.save()
+					.then(() => {
+						console.log("Service purchased");
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Failed to purchase service");
+					});
 			},
 		},
 		completeOrder: {
