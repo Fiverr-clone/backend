@@ -311,7 +311,6 @@ const RootQuery = new GraphQLObjectType({
 		},
 	},
 });
-// .sort({ createdAt: 1 });
 
 // Mutation
 const RootMutation = new GraphQLObjectType({
