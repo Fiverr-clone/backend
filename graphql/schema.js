@@ -193,7 +193,7 @@ const ConversationType = new GraphQLObjectType({
 		},
 		readByUser: { type: GraphQLBoolean },
 		lastMessage: { type: GraphQLString },
-		// createdAt: { type: GraphQLString },
+		createdAt: { type: GraphQLString },
 		// updatedAt: { type: GraphQLString },
 	}),
 });
@@ -217,8 +217,8 @@ const MessageType = new GraphQLObjectType({
 				return Conversation.findById(parent.conversationId);
 			},
 		},
-
 		desc: { type: GraphQLString },
+		createdAt: { type: GraphQLString },
 	}),
 });
 
@@ -306,11 +306,12 @@ const RootQuery = new GraphQLObjectType({
 				conversationId: { type: GraphQLNonNull(GraphQLID) },
 			},
 			resolve(parent, { conversationId }) {
-				return Message.find({ conversationId }).sort({ createdAt: 1 });
+				return Message.find({ conversationId }).sort({ createdAt: 1 }).exec();
 			},
 		},
 	},
 });
+// .sort({ createdAt: 1 });
 
 // Mutation
 const RootMutation = new GraphQLObjectType({
@@ -454,16 +455,26 @@ const RootMutation = new GraphQLObjectType({
 		deleteConversation: {
 			type: ConversationType,
 			args: {
-				id: { type: GraphQLNonNull(GraphQLID) },
+				conversationId: { type: GraphQLNonNull(GraphQLID) },
 			},
-			resolve(parent, { id }) {
-				return Conversation.findByIdAndDelete(id)
+			resolve(parent, { conversationId }) {
+				return Conversation.findByIdAndDelete({ _id: conversationId })
+					.then((deletedConversation) => {
+						if (!deletedConversation) {
+							throw new Error("Conversation not found");
+						}
+						return Message.deleteMany({ conversationId });
+					})
 					.then(() => {
-						console.log("Conversation deleted successfully");
+						console.log(
+							"Conversation and associated messages deleted successfully"
+						);
 					})
 					.catch((err) => {
 						console.log(err);
-						throw new Error("Failed to delete conversation");
+						throw new Error(
+							"Failed to delete conversation and associated messages"
+						);
 					});
 			},
 		},
