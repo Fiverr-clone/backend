@@ -204,6 +204,7 @@ const MessageType = new GraphQLObjectType({
 	name: "Message",
 	fields: () => ({
 		id: { type: GraphQLID },
+		userId: { type: GraphQLID },
 		User: {
 			type: UserType,
 			resolve(parent, args) {
@@ -296,16 +297,6 @@ const RootQuery = new GraphQLObjectType({
 			args: { id: { type: GraphQLNonNull(GraphQLID) } },
 			resolve(parent, args) {
 				return Conversation.findById(args.id);
-			},
-		},
-
-		messageByUserId: {
-			type: new GraphQLList(MessageType),
-			args: {
-				userId: { type: GraphQLNonNull(GraphQLID) },
-			},
-			resolve(parent, { userId }) {
-				return Message.find({ userId });
 			},
 		},
 		message: {
@@ -460,6 +451,22 @@ const RootMutation = new GraphQLObjectType({
 				return Conversation.findOneAndUpdate({ _id: id }, { readByUser: true });
 			},
 		},
+		deleteConversation: {
+			type: ConversationType,
+			args: {
+				id: { type: GraphQLNonNull(GraphQLID) },
+			},
+			resolve(parent, { id }) {
+				return Conversation.findByIdAndDelete(id)
+					.then(() => {
+						console.log("Conversation deleted successfully");
+					})
+					.catch((err) => {
+						console.log(err);
+						throw new Error("Failed to delete conversation");
+					});
+			},
+		},
 		createMessage: {
 			type: MessageType,
 			args: {
@@ -471,6 +478,7 @@ const RootMutation = new GraphQLObjectType({
 				try {
 					const newMessage = new Message({
 						conversationId,
+						userId,
 						desc,
 					});
 					const savedMessage = await newMessage.save();
@@ -489,20 +497,6 @@ const RootMutation = new GraphQLObjectType({
 				}
 			},
 		},
-		//   getMessages: {
-		// 	type: new GraphQLList(MessageType),
-		// 	args: {
-		// 	  conversationId: { type: GraphQLNonNull(GraphQLID) },
-		// 	},
-		// 	async resolve(parent, { conversationId }) {
-		// 	  try {
-		// 		const messages = await Message.find({ conversationId });
-		// 		return messages;
-		// 	  } catch (err) {
-		// 		throw new Error("Failed to fetch messages");
-		// 	  }
-		// 	},
-		//   },
 	},
 });
 module.exports = new GraphQLSchema({

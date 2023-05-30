@@ -4,11 +4,13 @@ const { Schema } = mongoose;
 
 const messageSchema = new Schema({
 	conversationId: {
-		type: String,
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Conversation",
 		required: true,
 	},
 	userId: {
-		type: String,
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User",
 		required: true,
 	},
 	desc: {
@@ -16,6 +18,6 @@ const messageSchema = new Schema({
 		required: true,
 	},
 	createdAt: { type: Date, default: Date.now },
- });
+});
 
 module.exports = mongoose.model("Message", messageSchema);
